@@ -10,6 +10,16 @@
 - HTTP 接口保持非阻塞，响应式调用链中禁止使用 `block()`、`subscribe()` 或阻塞式 I/O。
 - `HarnessAgent` 作为单例 Bean 使用；每次请求通过 `RuntimeContext` 隔离 `userId` 和 `sessionId`。
 
+## DDD 模块边界
+
+- `guman-domain` 是纯领域层，仅包含领域对象、值对象、领域事件与领域规则；不得依赖 Spring、AgentScope、WebFlux 或其他项目模块。
+- `guman-application` 是应用层，仅负责编排用例并声明输入、输出端口；只能依赖 `guman-domain` 和必要的抽象接口库。
+- `guman-infrastructure` 是基础设施层，负责实现应用层输出端口以及集成 AgentScope 等外部能力；可以依赖 `guman-application` 和 `guman-domain`。
+- `guman-interfaces` 是接口层，负责 HTTP、SSE、请求校验和接口 DTO；可以依赖 `guman-application` 与 `guman-domain`，不得直接调用基础设施实现。
+- `guman-bootstrap` 是启动装配层，仅放置应用入口、运行配置和模块装配依赖，不承载领域或业务逻辑。
+- 新业务先定义领域模型和应用端口，再在外层实现适配器；禁止 Controller 直接依赖 AgentScope SDK。
+- 跨模块依赖必须遵循由外向内的方向，不得形成循环依赖或绕过应用层调用基础设施。
+
 ## Spring 依赖注入
 
 - 统一使用字段注入，不使用构造器注入。

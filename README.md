@@ -14,8 +14,8 @@ Guman 是一个基于 [Spring Boot](https://spring.io/projects/spring-boot/) 与
 
 ```bash
 export DASHSCOPE_API_KEY="your-api-key"
-mvn verify
-mvn spring-boot:run
+mvn clean package
+java -jar guman-bootstrap/target/guman-bootstrap-0.1.0-SNAPSHOT.jar
 ```
 
 浏览器访问 <http://localhost:8080> 即可使用聊天界面，健康检查地址为 <http://localhost:8080/actuator/health>。
@@ -44,10 +44,27 @@ curl -N http://localhost:8080/api/chat/stream \
 
 ```text
 .
-├── .agentscope/workspace/AGENTS.md  # Agent 人格配置
-├── src/main/java/                   # Spring Boot 与流式 API
-├── src/main/resources/static/       # Web 聊天界面
-├── src/main/resources/application.yml
-├── pom.xml                          # Maven 与 AgentScope 依赖
+├── .agentscope/workspace/AGENTS.md       # Agent 人格配置
+├── guman-domain/                         # 领域对象、值对象与领域事件
+├── guman-application/                    # 应用用例与输入/输出端口
+├── guman-infrastructure/                 # AgentScope 配置与输出端口实现
+├── guman-interfaces/                     # WebFlux Controller、SSE DTO 与静态页面
+├── guman-bootstrap/                      # Spring Boot 入口与运行配置
+├── AGENTS.md                             # 项目开发与 DDD 边界规约
+├── pom.xml                               # Maven 聚合父工程
 └── README.md
 ```
+
+模块依赖方向如下：
+
+```text
+guman-domain
+      ↑
+guman-application
+      ↑            ↑
+guman-infrastructure  guman-interfaces
+          ↑            ↑
+          └─ guman-bootstrap ─┘
+```
+
+领域层不依赖 Spring 或 AgentScope；应用层通过 `AgentChatPort` 描述外部 Agent 能力，基础设施层负责 AgentScope 适配，接口层只调用 `StreamChatUseCase`。最终由启动模块完成所有模块装配。
