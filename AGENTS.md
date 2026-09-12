@@ -22,9 +22,9 @@
 
 ## Spring 依赖注入
 
-- 统一使用字段注入，不使用构造器注入。
-- 所有由 Spring 注入的依赖字段必须显式添加 `@Autowired`，不能依赖隐式注入。
-- 注入字段声明为 `private`；由于需要由 Spring 写入，不添加 `final`。
+- Spring Bean 统一使用构造器注入，并通过 Lombok `@RequiredArgsConstructor` 生成构造函数。
+- 由 Spring 注入的依赖字段声明为 `private final`，不要在字段上添加 `@Autowired`。
+- 没有依赖项的 Spring Bean 不需要为了形式统一而声明空构造函数。
 - 配置值字段使用 `@Value` 或 `@ConfigurationProperties` 注入，不要通过构造器传递。
 - 配置项使用 `application.yml`、`@ConfigurationProperties` 或 `@Value`；API Key 等敏感信息只能来自环境变量，不能写入源码或提交到 Git。
 

@@ -12,19 +12,19 @@ import io.github.paoxia.guman.domain.chat.ChatMessage;
 import io.github.paoxia.guman.domain.chat.ChatSession;
 import io.github.paoxia.guman.domain.chat.ChatStreamEvent;
 import io.github.paoxia.guman.domain.chat.ChatStreamEventType;
+import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /** 使用 AgentScope HarnessAgent 实现应用层定义的聊天输出端口。 */
 @Component
+@RequiredArgsConstructor
 public class AgentScopeChatAdapter implements AgentChatPort {
 
     /*
      * 全局共享的无状态 Agent，每次调用通过 RuntimeContext 隔离会话。
      */
-    @Autowired
-    private HarnessAgent agent;
+    private final HarnessAgent agent;
 
     /**
      * 调用 AgentScope 并将其事件转换为领域事件。

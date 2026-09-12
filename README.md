@@ -8,25 +8,54 @@ Guman 是一个基于 [Spring Boot](https://spring.io/projects/spring-boot/) 与
 
 - JDK 21
 - Maven 3.9+
-- DashScope API Key
+- Ollama，或提供 Chat Completions 接口的 OpenAI-compatible 服务
 
 ## 快速开始
 
+本地使用 Ollama 时，可以用一条命令安装并启动 Ollama、拉取 `qwen3.5:9b`，然后启动 Guman：
+
 ```bash
-export DASHSCOPE_API_KEY="your-api-key"
-mvn clean package
-java -jar guman-bootstrap/target/guman-bootstrap-0.1.0-SNAPSHOT.jar
+make start
+```
+
+如果 Ollama 已准备好，也可以直接构建并启动应用：
+
+```bash
+make run
+```
+
+只运行模型并进入 Ollama 交互会话，不启动 Guman：
+
+```bash
+make ollama-run
 ```
 
 浏览器访问 <http://localhost:8080> 即可使用聊天界面，健康检查地址为 <http://localhost:8080/actuator/health>。
 
-默认模型为 `dashscope:qwen-plus`。可以通过环境变量覆盖运行配置：
+模型配置位于 `guman.model.configurations`，`guman.model.active` 决定其中哪一套配置生效。仓库同时提供 `ollama-qwen` 和 `openai-compatible` 两套配置；当前选择可以通过环境变量覆盖：
 
 ```bash
-export DASHSCOPE_MODEL="qwen-plus"
+export GUMAN_ACTIVE_MODEL="ollama-qwen"
+export OLLAMA_MODEL="qwen3.5:9b"
+export OLLAMA_BASE_URL="http://localhost:11434"
 export AGENTSCOPE_WORKSPACE=".agentscope/workspace"
 export SERVER_PORT="8080"
 ```
+
+切换到 OpenAI-compatible API 时，无需修改 Java 代码：
+
+```bash
+export GUMAN_ACTIVE_MODEL="openai-compatible"
+export OPENAI_MODEL="your-model-name"
+export OPENAI_BASE_URL="https://llm.example.com"
+export OPENAI_ENDPOINT_PATH="/v1/chat/completions"
+export OPENAI_API_KEY="your-api-key"
+make run
+```
+
+`OPENAI_API_KEY` 仅通过环境变量提供；不需要鉴权的本地兼容服务可以留空。不同兼容服务对 structured output 和工具调用的实现存在差异，可以通过 `OPENAI_NATIVE_STRUCTURED_OUTPUT` 与 `OPENAI_NATIVE_STRUCTURED_OUTPUT_WITH_TOOLS` 调整，二者默认关闭。
+
+也可以在 `application.yml` 的 `guman.model.configurations` 下继续增加命名配置。同一 Provider 可以配置多套实例，例如不同的 Ollama 模型或不同的 OpenAI-compatible 地址；将 `guman.model.active` 指向相应名称后，重启应用即可切换。未被选择的配置不会创建模型连接。
 
 Web 端会为浏览器生成稳定的用户 ID，并为每个对话创建独立 session ID。AgentScope 运行时产生的会话与记忆文件不会提交到 Git；人格配置位于 `.agentscope/workspace/AGENTS.md`。
 

@@ -2,9 +2,9 @@ package io.github.paoxia.guman.interfaces.chat;
 
 import io.github.paoxia.guman.application.chat.StreamChatUseCase;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux;
 /** 将应用层聊天事件流转换为前端可直接消费的 SSE 事件。 */
 @RestController
 @RequestMapping("/api/chat")
+@RequiredArgsConstructor
 public class ChatController {
 
     /*
@@ -26,8 +27,7 @@ public class ChatController {
     /*
      * 流式聊天用例由应用模块提供实现。
      */
-    @Autowired
-    private StreamChatUseCase streamChatUseCase;
+    private final StreamChatUseCase streamChatUseCase;
 
     /**
      * 校验 Web 请求并持续返回文本及工具事件。

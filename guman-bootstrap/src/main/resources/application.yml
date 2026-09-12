@@ -5,17 +5,26 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
-agentscope:
-  model:
-    provider: dashscope
-  dashscope:
-    api-key: ${DASHSCOPE_API_KEY:}
-    model-name: ${DASHSCOPE_MODEL:qwen-plus}
-    stream: true
-
 guman:
   agent:
     workspace: ${AGENTSCOPE_WORKSPACE:.agentscope/workspace}
+  model:
+    active: ${GUMAN_ACTIVE_MODEL:ollama-qwen}
+    configurations:
+      ollama-qwen:
+        provider: ollama
+        model-name: ${OLLAMA_MODEL:qwen3.5:9b}
+        base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+        stream: true
+      openai-compatible:
+        provider: openai
+        model-name: ${OPENAI_MODEL:}
+        base-url: ${OPENAI_BASE_URL:}
+        api-key: ${OPENAI_API_KEY:}
+        endpoint-path: ${OPENAI_ENDPOINT_PATH:/v1/chat/completions}
+        stream: true
+        native-structured-output: ${OPENAI_NATIVE_STRUCTURED_OUTPUT:false}
+        native-structured-output-with-tools: ${OPENAI_NATIVE_STRUCTURED_OUTPUT_WITH_TOOLS:false}
 
 management:
   endpoints:

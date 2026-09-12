@@ -3,20 +3,20 @@ package io.github.paoxia.guman.infrastructure.agentscope;
 import io.agentscope.core.model.Model;
 import io.agentscope.harness.agent.HarnessAgent;
 import java.nio.file.Path;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /** 创建并配置应用共享的 AgentScope Agent。 */
 @Configuration(proxyBeanMethods = false)
+@RequiredArgsConstructor
 public class AgentConfiguration {
 
     /*
      * AgentScope 模型由对应的 Spring Boot Starter 创建并注入。
      */
-    @Autowired
-    private Model model;
+    private final Model model;
 
     /*
      * Agent 工作区路径来自应用配置，用于保存人格、记忆和会话数据。
