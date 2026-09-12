@@ -223,15 +223,15 @@
     const thinkingSummary = document.createElement("summary");
     thinkingSummary.textContent = "思考过程";
     const thinkingContent = document.createElement("div");
-    thinkingContent.className = "thinking-content";
-    thinkingContent.textContent = message.thinking ?? "";
+    thinkingContent.className = "thinking-content markdown-body";
+    renderMarkdown(thinkingContent, message.thinking ?? "");
     thinking.append(thinkingSummary, thinkingContent);
     const tools = document.createElement("div");
     tools.className = "tool-events";
     renderToolEvents(tools, message.tools ?? []);
     const text = document.createElement("div");
-    text.className = "assistant-text";
-    text.textContent = message.content;
+    text.className = "assistant-text markdown-body";
+    renderMarkdown(text, message.content);
     body.append(name, thinking, tools, text);
     article.append(avatar, body);
     return article;
@@ -374,9 +374,201 @@
     const wasHidden = thinkingPanel.hidden;
     thinkingPanel.hidden = !thinkingContent;
     if (thinkingContent && wasHidden) thinkingPanel.open = true;
-    thinkingPanel.querySelector(".thinking-content").textContent = thinkingContent;
-    article.querySelector(".assistant-text").textContent = message.content;
+    const thinkingContainer = thinkingPanel.querySelector(".thinking-content");
+    renderMarkdown(thinkingContainer, thinkingContent);
+    if (thinkingPanel.open) thinkingContainer.scrollTop = thinkingContainer.scrollHeight;
+    renderMarkdown(article.querySelector(".assistant-text"), message.content);
     renderToolEvents(article.querySelector(".tool-events"), message.tools ?? []);
+  }
+
+  function renderMarkdown(container, markdown) {
+    container.replaceChildren();
+    if (!markdown) return;
+
+    const lines = markdown.replaceAll("\r\n", "\n").split("\n");
+    let index = 0;
+    while (index < lines.length) {
+      if (!lines[index].trim()) {
+        index += 1;
+        continue;
+      }
+
+      const fence = lines[index].match(/^\s*```([^`]*)$/);
+      if (fence) {
+        const codeLines = [];
+        index += 1;
+        while (index < lines.length && !/^\s*```\s*$/.test(lines[index])) {
+          codeLines.push(lines[index]);
+          index += 1;
+        }
+        if (index < lines.length) index += 1;
+        const pre = document.createElement("pre");
+        const code = document.createElement("code");
+        if (fence[1].trim()) code.dataset.language = fence[1].trim();
+        code.textContent = codeLines.join("\n");
+        pre.append(code);
+        container.append(pre);
+        continue;
+      }
+
+      if (isTableStart(lines, index)) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "markdown-table-wrap";
+        const table = document.createElement("table");
+        const head = document.createElement("thead");
+        const headRow = document.createElement("tr");
+        splitTableRow(lines[index]).forEach(cell => {
+          const header = document.createElement("th");
+          appendInlineMarkdown(header, cell);
+          headRow.append(header);
+        });
+        head.append(headRow);
+        table.append(head);
+        index += 2;
+        const body = document.createElement("tbody");
+        while (index < lines.length && lines[index].includes("|") && lines[index].trim()) {
+          const row = document.createElement("tr");
+          splitTableRow(lines[index]).forEach(cell => {
+            const data = document.createElement("td");
+            appendInlineMarkdown(data, cell);
+            row.append(data);
+          });
+          body.append(row);
+          index += 1;
+        }
+        if (body.childElementCount) table.append(body);
+        wrapper.append(table);
+        container.append(wrapper);
+        continue;
+      }
+
+      const heading = lines[index].match(/^(#{1,6})\s+(.+)$/);
+      if (heading) {
+        const element = document.createElement(`h${heading[1].length}`);
+        appendInlineMarkdown(element, heading[2]);
+        container.append(element);
+        index += 1;
+        continue;
+      }
+
+      if (/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(lines[index])) {
+        container.append(document.createElement("hr"));
+        index += 1;
+        continue;
+      }
+
+      if (/^\s*>\s?/.test(lines[index])) {
+        const quoteLines = [];
+        while (index < lines.length && /^\s*>\s?/.test(lines[index])) {
+          quoteLines.push(lines[index].replace(/^\s*>\s?/, ""));
+          index += 1;
+        }
+        const quote = document.createElement("blockquote");
+        renderMarkdown(quote, quoteLines.join("\n"));
+        container.append(quote);
+        continue;
+      }
+
+      const unorderedItem = lines[index].match(/^\s*[-*+]\s+(.+)$/);
+      const orderedItem = lines[index].match(/^\s*\d+[.)]\s+(.+)$/);
+      if (unorderedItem || orderedItem) {
+        const ordered = Boolean(orderedItem);
+        const list = document.createElement(ordered ? "ol" : "ul");
+        const itemPattern = ordered ? /^\s*\d+[.)]\s+(.+)$/ : /^\s*[-*+]\s+(.+)$/;
+        let item = lines[index].match(itemPattern);
+        while (item) {
+          const listItem = document.createElement("li");
+          appendInlineMarkdown(listItem, item[1]);
+          list.append(listItem);
+          index += 1;
+          item = index < lines.length ? lines[index].match(itemPattern) : null;
+        }
+        container.append(list);
+        continue;
+      }
+
+      const paragraphLines = [lines[index]];
+      index += 1;
+      while (index < lines.length && lines[index].trim() && !startsMarkdownBlock(lines, index)) {
+        paragraphLines.push(lines[index]);
+        index += 1;
+      }
+      const paragraph = document.createElement("p");
+      appendInlineMarkdown(paragraph, paragraphLines.join(" "));
+      container.append(paragraph);
+    }
+  }
+
+  function startsMarkdownBlock(lines, index) {
+    const line = lines[index];
+    return /^\s*```/.test(line)
+      || /^(#{1,6})\s+/.test(line)
+      || /^\s*>\s?/.test(line)
+      || /^\s*[-*+]\s+/.test(line)
+      || /^\s*\d+[.)]\s+/.test(line)
+      || /^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)
+      || isTableStart(lines, index);
+  }
+
+  function isTableStart(lines, index) {
+    return index + 1 < lines.length
+      && lines[index].includes("|")
+      && isTableSeparator(lines[index + 1]);
+  }
+
+  function isTableSeparator(line) {
+    const cells = splitTableRow(line);
+    return cells.length > 0 && cells.every(cell => /^:?-{3,}:?$/.test(cell));
+  }
+
+  function splitTableRow(line) {
+    return line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(cell => cell.trim());
+  }
+
+  function appendInlineMarkdown(parent, text) {
+    const tokenPattern = /(`[^`\n]+`|\*\*[^*\n]+\*\*|__[^_\n]+__|\[[^\]\n]+\]\([^\s)]+\)|\*[^*\n]+\*|_[^_\n]+_)/g;
+    let cursor = 0;
+    for (const match of text.matchAll(tokenPattern)) {
+      parent.append(document.createTextNode(text.slice(cursor, match.index)));
+      const token = match[0];
+      if (token.startsWith("`")) {
+        const code = document.createElement("code");
+        code.textContent = token.slice(1, -1);
+        parent.append(code);
+      } else if (token.startsWith("**") || token.startsWith("__")) {
+        const strong = document.createElement("strong");
+        appendInlineMarkdown(strong, token.slice(2, -2));
+        parent.append(strong);
+      } else if (token.startsWith("[")) {
+        const boundary = token.lastIndexOf("](");
+        const label = token.slice(1, boundary);
+        const href = token.slice(boundary + 2, -1);
+        if (isSafeLink(href)) {
+          const link = document.createElement("a");
+          link.href = href;
+          link.rel = "noopener noreferrer";
+          appendInlineMarkdown(link, label);
+          parent.append(link);
+        } else {
+          parent.append(document.createTextNode(label));
+        }
+      } else {
+        const emphasis = document.createElement("em");
+        appendInlineMarkdown(emphasis, token.slice(1, -1));
+        parent.append(emphasis);
+      }
+      cursor = match.index + token.length;
+    }
+    parent.append(document.createTextNode(text.slice(cursor)));
+  }
+
+  function isSafeLink(href) {
+    try {
+      const url = new URL(href, document.baseURI);
+      return url.protocol === "http:" || url.protocol === "https:" || url.protocol === "mailto:";
+    } catch {
+      return false;
+    }
   }
 
   function setStreaming(streaming) {

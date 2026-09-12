@@ -62,6 +62,8 @@ make run
 
 Web 端会为浏览器生成稳定的用户 ID，并为每个对话创建独立 session ID。AgentScope 运行时产生的会话与记忆文件不会提交到 Git；人格配置位于 `.agentscope/workspace/AGENTS.md`。
 
+模型最终回答和 thinking 内容支持常用 Markdown，包括标题、粗体、斜体、列表、引用、代码块、链接和表格。页面通过 DOM 节点与 `textContent` 安全构建内容，不直接将模型输出写入 `innerHTML`。
+
 ## 流式接口
 
 ```bash
