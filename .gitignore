@@ -1,0 +1,16 @@
+# Maven
+target/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Local secrets
+.env
+
+# AgentScope runtime data (keep the workspace persona)
+.agentscope/*
+!.agentscope/workspace/
+.agentscope/workspace/*
+!.agentscope/workspace/AGENTS.md
