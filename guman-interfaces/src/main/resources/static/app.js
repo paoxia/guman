@@ -3,11 +3,22 @@
 
   const STORAGE_KEY = "guman.conversations.v1";
   const USER_KEY = "guman.user-id.v1";
+  const MAX_ATTACHMENT_COUNT = 4;
+  const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024;
+  const SUPPORTED_ATTACHMENT_EXTENSIONS = new Set([
+    "png", "jpg", "jpeg", "webp", "pdf", "txt", "md", "markdown", "csv", "json",
+    "xml", "yaml", "yml", "java", "kt", "js", "ts", "jsx", "tsx", "py", "go",
+    "rs", "c", "h", "cpp", "hpp", "html", "css", "scss", "sql", "sh", "bash",
+    "zsh", "properties", "toml", "ini", "log"
+  ]);
 
   const elements = {
     composer: document.querySelector("#composer"),
     input: document.querySelector("#messageInput"),
     send: document.querySelector("#sendButton"),
+    attachmentButton: document.querySelector("#attachmentButton"),
+    attachmentInput: document.querySelector("#attachmentInput"),
+    attachmentPreviewList: document.querySelector("#attachmentPreviewList"),
     conversation: document.querySelector("#conversation"),
     messageList: document.querySelector("#messageList"),
     emptyState: document.querySelector("#emptyState"),
@@ -23,6 +34,7 @@
 
   const state = {
     conversations: loadConversations(),
+    attachments: [],
     activeId: null,
     abortController: null,
     streaming: false,
@@ -49,12 +61,14 @@
     elements.input.addEventListener("keydown", event => {
       if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
         event.preventDefault();
-        if (!state.streaming && elements.input.value.trim()) {
+        if (!state.streaming && hasDraftContent()) {
           elements.composer.requestSubmit();
         }
       }
     });
     elements.newChat.addEventListener("click", () => createConversation(true));
+    elements.attachmentButton.addEventListener("click", () => elements.attachmentInput.click());
+    elements.attachmentInput.addEventListener("change", handleAttachmentSelection);
     elements.send.addEventListener("click", event => {
       if (state.streaming) {
         event.preventDefault();
@@ -203,7 +217,12 @@
     if (message.role === "user") {
       const content = document.createElement("div");
       content.className = "message-content";
-      content.textContent = message.content;
+      if (message.content) {
+        const text = document.createElement("div");
+        text.textContent = message.content;
+        content.append(text);
+      }
+      renderMessageAttachments(content, message.attachments ?? []);
       article.append(content);
       return article;
     }
@@ -247,14 +266,119 @@
     });
   }
 
+  function handleAttachmentSelection() {
+    const selectedFiles = Array.from(elements.attachmentInput.files ?? []);
+    elements.attachmentInput.value = "";
+    for (const file of selectedFiles) {
+      if (state.attachments.length >= MAX_ATTACHMENT_COUNT) {
+        showToast(`一次最多添加 ${MAX_ATTACHMENT_COUNT} 个附件`);
+        break;
+      }
+      if (!isSupportedAttachment(file)) {
+        showToast(`不支持 ${file.name} 的文件类型`);
+        continue;
+      }
+      if (!file.size) {
+        showToast(`${file.name} 是空文件`);
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_SIZE) {
+        showToast(`${file.name} 超过 5 MB`);
+        continue;
+      }
+      const duplicate = state.attachments.some(item =>
+        item.name === file.name && item.size === file.size && item.lastModified === file.lastModified);
+      if (!duplicate) state.attachments.push(file);
+    }
+    renderAttachmentPreviews();
+    updateSendButton();
+  }
+
+  function isSupportedAttachment(file) {
+    const extension = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "";
+    return SUPPORTED_ATTACHMENT_EXTENSIONS.has(extension);
+  }
+
+  function renderAttachmentPreviews() {
+    elements.attachmentPreviewList.replaceChildren();
+    state.attachments.forEach((file, index) => {
+      const item = document.createElement("div");
+      item.className = "draft-attachment";
+      const type = document.createElement("span");
+      type.className = "attachment-type";
+      type.textContent = attachmentTypeLabel(file.name);
+      const details = document.createElement("span");
+      details.className = "attachment-details";
+      const name = document.createElement("strong");
+      name.textContent = file.name;
+      name.title = file.name;
+      const size = document.createElement("small");
+      size.textContent = formatFileSize(file.size);
+      details.append(name, size);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "attachment-remove";
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", `移除附件 ${file.name}`);
+      remove.addEventListener("click", () => {
+        state.attachments.splice(index, 1);
+        renderAttachmentPreviews();
+        updateSendButton();
+      });
+      item.append(type, details, remove);
+      elements.attachmentPreviewList.append(item);
+    });
+    elements.attachmentButton.classList.toggle("has-files", state.attachments.length > 0);
+    elements.attachmentButton.setAttribute(
+      "aria-label",
+      state.attachments.length ? `添加附件，已选择 ${state.attachments.length} 个` : "添加附件"
+    );
+  }
+
+  function renderMessageAttachments(container, attachments) {
+    if (!attachments.length) return;
+    const list = document.createElement("div");
+    list.className = "message-attachment-list";
+    attachments.forEach(attachment => {
+      const item = document.createElement("span");
+      item.className = "message-attachment";
+      item.textContent = `${attachmentTypeLabel(attachment.name)} ${attachment.name}`;
+      item.title = `${attachment.name} · ${formatFileSize(attachment.size)}`;
+      list.append(item);
+    });
+    container.append(list);
+  }
+
+  function attachmentTypeLabel(filename) {
+    const extension = filename.includes(".") ? filename.split(".").pop().toUpperCase() : "FILE";
+    if (["PNG", "JPG", "JPEG", "WEBP"].includes(extension)) return "IMG";
+    return extension.length <= 5 ? extension : "FILE";
+  }
+
+  function formatFileSize(size) {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${Math.ceil(size / 1024)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     if (state.streaming) return;
     const prompt = elements.input.value.trim();
-    if (!prompt) return;
+    if (!prompt && !state.attachments.length) return;
 
     const conversation = activeConversation() ?? createConversation(false);
-    const userMessage = { id: crypto.randomUUID(), role: "user", content: prompt };
+    const outgoingAttachments = [...state.attachments];
+    const userMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: prompt,
+      attachments: outgoingAttachments.map(file => ({
+        name: file.name,
+        mediaType: file.type,
+        size: file.size
+      }))
+    };
     const assistantMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
@@ -265,10 +389,12 @@
 
     conversation.messages.push(userMessage, assistantMessage);
     if (conversation.title === "新对话") {
-      conversation.title = createTitle(prompt);
+      conversation.title = createTitle(prompt || outgoingAttachments[0].name);
     }
     conversation.updatedAt = Date.now();
     elements.input.value = "";
+    state.attachments = [];
+    renderAttachmentPreviews();
     resizeInput();
     persist();
     renderAll();
@@ -276,17 +402,26 @@
 
     state.abortController = new AbortController();
     try {
+      const request = {
+        message: prompt || "请分析附件内容，并说明关键信息。",
+        userId: state.userId,
+        sessionId: conversation.id
+      };
+      const headers = { "Accept": "text/event-stream" };
+      let body;
+      if (outgoingAttachments.length) {
+        const formData = new FormData();
+        formData.append("request", new Blob([JSON.stringify(request)], { type: "application/json" }));
+        outgoingAttachments.forEach(file => formData.append("files", file, file.name));
+        body = formData;
+      } else {
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify(request);
+      }
       const response = await fetch("/api/chat/stream", {
         method: "POST",
-        headers: {
-          "Accept": "text/event-stream",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: prompt,
-          userId: state.userId,
-          sessionId: conversation.id
-        }),
+        headers,
+        body,
         signal: state.abortController.signal
       });
 
@@ -360,7 +495,7 @@
       const tool = [...message.tools].reverse().find(item => item.name === name && !item.done);
       if (tool) tool.done = true;
     } else if (eventName === "error") {
-      message.content ||= `生成失败：${data.content || "未知错误"}`;
+      message.content ||= data.content || "生成失败，请稍后重试。";
     }
     updateAssistantMessage(message);
     scrollToBottom(true);
@@ -573,15 +708,20 @@
 
   function setStreaming(streaming) {
     state.streaming = streaming;
+    elements.attachmentButton.disabled = streaming;
     elements.send.classList.toggle("streaming", streaming);
-    elements.send.disabled = !streaming && !elements.input.value.trim();
+    elements.send.disabled = !streaming && !hasDraftContent();
     elements.send.setAttribute("aria-label", streaming ? "停止生成" : "发送消息");
     elements.status.classList.toggle("generating", streaming);
     elements.status.querySelector(".status-label").textContent = streaming ? "Generating" : "Ready";
   }
 
   function updateSendButton() {
-    elements.send.disabled = !state.streaming && !elements.input.value.trim();
+    elements.send.disabled = !state.streaming && !hasDraftContent();
+  }
+
+  function hasDraftContent() {
+    return Boolean(elements.input.value.trim() || state.attachments.length);
   }
 
   function resizeInput() {

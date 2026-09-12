@@ -501,6 +501,26 @@ button {
   line-height: 1.55;
 }
 
+.message-attachment-list {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.message-attachment {
+  display: inline-flex;
+  max-width: 260px;
+  padding: 5px 8px;
+  overflow: hidden;
+  border: 1px solid rgba(39,39,42,.12);
+  border-radius: 7px;
+  background: rgba(255,255,255,.55);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .message.assistant {
   gap: 13px;
   align-items: flex-start;
@@ -770,6 +790,78 @@ button {
   color: #9b9ba1;
 }
 
+.attachment-preview-list {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 8px;
+  overflow-x: auto;
+}
+
+.attachment-preview-list:empty {
+  display: none;
+}
+
+.draft-attachment {
+  display: flex;
+  flex: 0 0 min(220px, 72vw);
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-soft);
+}
+
+.attachment-type {
+  display: grid;
+  flex: 0 0 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 8px;
+  color: #6d28d9;
+  background: #ede9fe;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.attachment-details {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.attachment-details strong {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 620;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-details small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.attachment-remove {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 20px;
+}
+
+.attachment-remove:hover {
+  color: var(--text);
+  background: #e4e4e7;
+}
+
 .composer-toolbar {
   display: flex;
   align-items: center;
@@ -792,6 +884,16 @@ button {
 
 .tool-button:hover {
   background: var(--surface-soft);
+}
+
+.tool-button.has-files {
+  color: #6d28d9;
+  background: #ede9fe;
+}
+
+.tool-button:disabled {
+  opacity: .45;
+  cursor: default;
 }
 
 .tool-button svg {

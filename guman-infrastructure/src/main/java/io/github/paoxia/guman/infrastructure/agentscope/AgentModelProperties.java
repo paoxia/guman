@@ -96,6 +96,11 @@ public class AgentModelProperties {
         private Boolean thinkingEnabled;
 
         /*
+         * Ollama 单次推理使用的上下文窗口大小，未配置时采用模型服务默认值。
+         */
+        private Integer numCtx;
+
+        /*
          * 是否启用 OpenAI 原生结构化输出，未配置时采用 AgentScope 默认值。
          */
         private Boolean nativeStructuredOutput;
@@ -232,6 +237,24 @@ public class AgentModelProperties {
          */
         public void setThinkingEnabled(Boolean thinkingEnabled) {
             this.thinkingEnabled = thinkingEnabled;
+        }
+
+        /**
+         * 获取 Ollama 上下文窗口大小。
+         *
+         * @return 上下文 token 数量，未配置时为空
+         */
+        public Integer getNumCtx() {
+            return numCtx;
+        }
+
+        /**
+         * 设置 Ollama 上下文窗口大小，无返回值。
+         *
+         * @param numCtx 上下文 token 数量
+         */
+        public void setNumCtx(Integer numCtx) {
+            this.numCtx = numCtx;
         }
 
         /**

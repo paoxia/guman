@@ -3,6 +3,9 @@ package io.github.paoxia.guman.interfaces.chat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
+import io.github.paoxia.guman.domain.chat.ChatAttachment;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ChatRequestTest {
@@ -26,5 +29,19 @@ class ChatRequestTest {
         ChatRequest request = new ChatRequest(" ", "user", "session");
 
         assertThatIllegalArgumentException().isThrownBy(request::toCommand);
+    }
+
+    /** 验证接口请求可以和已读取附件共同转换为应用命令，无入参且无返回值。 */
+    @Test
+    void convertsRequestsWithAttachments() {
+        ChatRequest request = new ChatRequest("", "user", "session");
+        ChatAttachment attachment =
+                new ChatAttachment(
+                        "notes.md",
+                        "text/markdown",
+                        "# Notes".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(request.toCommand(List.of(attachment)).getMessage().getAttachments())
+                .containsExactly(attachment);
     }
 }

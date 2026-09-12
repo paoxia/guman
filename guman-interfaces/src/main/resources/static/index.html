@@ -101,11 +101,14 @@
       <footer class="composer-area">
         <form class="composer" id="composer">
           <textarea id="messageInput" rows="1" maxlength="20000" placeholder="给 Guman 发消息" aria-label="消息内容"></textarea>
+          <div class="attachment-preview-list" id="attachmentPreviewList" aria-live="polite"></div>
           <div class="composer-toolbar">
             <div class="composer-tools">
-              <button class="tool-button" type="button" aria-label="添加附件" title="附件功能即将推出">
+              <button class="tool-button" id="attachmentButton" type="button" aria-label="添加附件" title="添加图片、文本或 PDF">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5-6.5 6.5a4 4 0 0 0 5.7 5.7l7.1-7.1a2.8 2.8 0 1 0-4-4l-7 7a1.6 1.6 0 0 0 2.3 2.3l6.4-6.4"/></svg>
               </button>
+              <input id="attachmentInput" type="file" multiple hidden
+                     accept="image/png,image/jpeg,image/webp,application/pdf,.txt,.md,.markdown,.csv,.json,.xml,.yaml,.yml,.java,.kt,.js,.ts,.jsx,.tsx,.py,.go,.rs,.c,.h,.cpp,.hpp,.html,.css,.scss,.sql,.sh,.bash,.zsh,.properties,.toml,.ini,.log">
               <span class="composer-hint">Enter 发送 · Shift + Enter 换行</span>
             </div>
             <button class="send-button" id="sendButton" type="submit" aria-label="发送消息" disabled>

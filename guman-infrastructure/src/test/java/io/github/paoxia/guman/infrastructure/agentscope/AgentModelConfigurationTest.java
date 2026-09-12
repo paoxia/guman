@@ -29,6 +29,7 @@ class AgentModelConfigurationTest {
                         "guman.model.configurations.local-qwen.provider=ollama",
                         "guman.model.configurations.local-qwen.model-name=qwen3.5:9b",
                         "guman.model.configurations.local-qwen.base-url=http://localhost:11434",
+                        "guman.model.configurations.local-qwen.num-ctx=12288",
                         "guman.model.configurations.local-qwen.thinking-enabled=true",
                         "guman.model.configurations.remote.provider=openai")
                 .run(
@@ -43,6 +44,7 @@ class AgentModelConfigurationTest {
                                     (OllamaOptions)
                                             ReflectionTestUtils.getField(model, "defaultOptions");
                             assertThat(defaultOptions).isNotNull();
+                            assertThat(defaultOptions.getNumCtx()).isEqualTo(12288);
                             assertThat(defaultOptions.getThinkOption())
                                     .isEqualTo(ThinkOption.ThinkBoolean.ENABLED);
                         });

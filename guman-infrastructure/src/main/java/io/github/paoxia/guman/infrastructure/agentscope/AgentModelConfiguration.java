@@ -77,15 +77,28 @@ public class AgentModelConfiguration {
                                         settings.getModelName(), propertyPrefix + ".model-name"))
                         .baseUrl(requireText(settings.getBaseUrl(), propertyPrefix + ".base-url"))
                         .stream(settings.isStream());
+        OllamaOptions.Builder optionsBuilder = OllamaOptions.builder();
+        boolean hasDefaultOptions = false;
+        if (settings.getNumCtx() != null) {
+            if (settings.getNumCtx() <= 0) {
+                throw new IllegalStateException(propertyPrefix + ".num-ctx must be greater than 0");
+            }
+            optionsBuilder.numCtx(settings.getNumCtx());
+            hasDefaultOptions = true;
+        }
         if (settings.getThinkingEnabled() != null) {
             ThinkOption thinkOption =
                     settings.getThinkingEnabled()
                             ? ThinkOption.ThinkBoolean.ENABLED
                             : ThinkOption.ThinkBoolean.DISABLED;
-            builder.defaultOptions(OllamaOptions.builder().thinkOption(thinkOption).build());
+            optionsBuilder.thinkOption(thinkOption);
+            hasDefaultOptions = true;
             if (settings.getThinkingEnabled()) {
                 builder.formatter(new ThinkingOllamaChatFormatter());
             }
+        }
+        if (hasDefaultOptions) {
+            builder.defaultOptions(optionsBuilder.build());
         }
         return builder.build();
     }

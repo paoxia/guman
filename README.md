@@ -38,6 +38,7 @@ make ollama-run
 export GUMAN_ACTIVE_MODEL="ollama-qwen"
 export OLLAMA_MODEL="qwen3.5:9b"
 export OLLAMA_BASE_URL="http://localhost:11434"
+export OLLAMA_NUM_CTX="12288"
 export OLLAMA_THINKING_ENABLED="true"
 export AGENTSCOPE_WORKSPACE=".agentscope/workspace"
 export SERVER_PORT="8080"
@@ -58,11 +59,13 @@ make run
 
 也可以在 `application.yml` 的 `guman.model.configurations` 下继续增加命名配置。同一 Provider 可以配置多套实例，例如不同的 Ollama 模型或不同的 OpenAI-compatible 地址；将 `guman.model.active` 指向相应名称后，重启应用即可切换。未被选择的配置不会创建模型连接。
 
-`qwen3.5:9b` 支持 thinking。默认的 `ollama-qwen` 配置通过 `thinking-enabled: true` 显式开启该能力，也可以设置 `OLLAMA_THINKING_ENABLED=false` 关闭。思考内容使用独立事件传输并显示在回答上方的“思考过程”面板中，不会混入最终回答。
+`qwen3.5:9b` 支持 thinking。默认的 `ollama-qwen` 配置通过 `thinking-enabled: true` 显式开启该能力，也可以设置 `OLLAMA_THINKING_ENABLED=false` 关闭。思考内容使用独立事件传输并显示在回答上方的“思考过程”面板中，不会混入最终回答。`num-ctx` 默认设置为 `12288`，可通过 `OLLAMA_NUM_CTX` 按机器内存和显存容量调整；该值能容纳当前图片输入，同时适配 12 GB 显存。模型层数不做人工限制，由 Ollama 根据可用显存自动加载；当前设备可将 `qwen3.5:9b` 全部放入 GPU。
 
 Web 端会为浏览器生成稳定的用户 ID，并为每个对话创建独立 session ID。AgentScope 运行时产生的会话与记忆文件不会提交到 Git；人格配置位于 `.agentscope/workspace/AGENTS.md`。
 
 模型最终回答和 thinking 内容支持常用 Markdown，包括标题、粗体、斜体、列表、引用、代码块、链接和表格。页面通过 DOM 节点与 `textContent` 安全构建内容，不直接将模型输出写入 `innerHTML`。
+
+附件按钮支持一次选择最多 4 个、单个不超过 5 MB 的文件。PNG、JPEG 和 WebP 图片会作为多模态输入发送；UTF-8 文本、Markdown、JSON、CSV、XML、YAML 和常见源代码文件会作为带文件名边界的文本发送；文本型 PDF 使用 Apache PDFBox 提取文本后发送。加密 PDF、超过 100 页的 PDF 以及没有可提取文本的扫描版 PDF 暂不支持。
 
 ## 流式接口
 

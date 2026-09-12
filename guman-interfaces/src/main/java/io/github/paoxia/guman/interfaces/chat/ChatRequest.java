@@ -1,7 +1,9 @@
 package io.github.paoxia.guman.interfaces.chat;
 
 import io.github.paoxia.guman.application.chat.ChatCommand;
-import jakarta.validation.constraints.NotBlank;
+import io.github.paoxia.guman.domain.chat.ChatAttachment;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 
 /** Web 端发起一次对话所需的请求参数。 */
 public class ChatRequest {
@@ -9,7 +11,7 @@ public class ChatRequest {
     /*
      * 用户发送给 Agent 的原始文本。
      */
-    @NotBlank(message = "message must not be blank")
+    @Size(max = 20000, message = "message must contain no more than 20000 characters")
     private String message;
 
     /*
@@ -47,6 +49,16 @@ public class ChatRequest {
      */
     public ChatCommand toCommand() {
         return new ChatCommand(message, userId, sessionId);
+    }
+
+    /**
+     * 将接口请求和已读取的附件转换为应用层命令。
+     *
+     * @param attachments 已在接口边界校验的附件
+     * @return 经过领域规则校验的聊天命令
+     */
+    public ChatCommand toCommand(List<ChatAttachment> attachments) {
+        return new ChatCommand(message, userId, sessionId, attachments);
     }
 
     /**

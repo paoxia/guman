@@ -1,7 +1,9 @@
 package io.github.paoxia.guman.application.chat;
 
 import io.github.paoxia.guman.domain.chat.ChatMessage;
+import io.github.paoxia.guman.domain.chat.ChatAttachment;
 import io.github.paoxia.guman.domain.chat.ChatSession;
+import java.util.List;
 
 /** 封装流式聊天用例所需的领域输入。 */
 public class ChatCommand {
@@ -24,7 +26,23 @@ public class ChatCommand {
      * @param sessionId 会话标识，为空时使用领域默认值
      */
     public ChatCommand(String message, String userId, String sessionId) {
-        this.message = new ChatMessage(message);
+        this(message, userId, sessionId, List.of());
+    }
+
+    /**
+     * 根据外部文本、附件和会话标识创建流式聊天命令。
+     *
+     * @param message 用户发送的消息内容
+     * @param userId 用户标识，为空时使用领域默认值
+     * @param sessionId 会话标识，为空时使用领域默认值
+     * @param attachments 已在系统边界读取并校验的附件
+     */
+    public ChatCommand(
+            String message,
+            String userId,
+            String sessionId,
+            List<ChatAttachment> attachments) {
+        this.message = new ChatMessage(message, attachments);
         this.session = new ChatSession(userId, sessionId);
     }
 

@@ -1,6 +1,10 @@
 spring:
   application:
     name: guman
+  webflux:
+    multipart:
+      max-in-memory-size: 256KB
+      max-disk-usage-per-part: 5MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -16,6 +20,7 @@ guman:
         model-name: ${OLLAMA_MODEL:qwen3.5:9b}
         base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
         stream: true
+        num-ctx: ${OLLAMA_NUM_CTX:12288}
         thinking-enabled: ${OLLAMA_THINKING_ENABLED:true}
       openai-compatible:
         provider: openai
