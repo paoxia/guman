@@ -3,6 +3,11 @@ package io.github.paoxia.guman.domain.chat;
 /** 描述 Agent 执行过程中可被上层消费的领域事件类型。 */
 public enum ChatStreamEventType {
     /**
+     * 模型新生成的一段思考过程。
+     */
+    THINKING_DELTA,
+
+    /**
      * 模型新生成的一段文本。
      */
     TEXT_DELTA,

@@ -3,6 +3,7 @@ package io.github.paoxia.guman.infrastructure.agentscope;
 import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.core.event.AgentEvent;
 import io.agentscope.core.event.TextBlockDeltaEvent;
+import io.agentscope.core.event.ThinkingBlockDeltaEvent;
 import io.agentscope.core.event.ToolCallStartEvent;
 import io.agentscope.core.event.ToolResultEndEvent;
 import io.agentscope.core.message.UserMessage;
@@ -51,8 +52,12 @@ public class AgentScopeChatAdapter implements AgentChatPort {
      * @param event AgentScope 在执行过程中产生的原始事件
      * @return 对应的聊天领域事件；上层无需处理该事件时返回 null
      */
-    private ChatStreamEvent toDomainEvent(AgentEvent event) {
+    ChatStreamEvent toDomainEvent(AgentEvent event) {
         return switch (event.getType()) {
+            case THINKING_BLOCK_DELTA ->
+                    new ChatStreamEvent(
+                            ChatStreamEventType.THINKING_DELTA,
+                            ((ThinkingBlockDeltaEvent) event).getDelta());
             case TEXT_BLOCK_DELTA ->
                     new ChatStreamEvent(
                             ChatStreamEventType.TEXT_DELTA,

@@ -3,6 +3,7 @@ SHELL := /bin/bash
 OLLAMA_HOST ?= 127.0.0.1:11434
 OLLAMA_BASE_URL ?= http://$(OLLAMA_HOST)
 OLLAMA_MODEL ?= qwen3.5:9b
+OLLAMA_THINKING_ENABLED ?= true
 GUMAN_ACTIVE_MODEL ?= ollama-qwen
 GUMAN_JAR := guman-bootstrap/target/guman-bootstrap-0.1.0-SNAPSHOT.jar
 OLLAMA_LOG := /tmp/guman-ollama.log
@@ -55,6 +56,7 @@ run: package
 	GUMAN_ACTIVE_MODEL="$(GUMAN_ACTIVE_MODEL)" \
 	OLLAMA_MODEL="$(OLLAMA_MODEL)" \
 	OLLAMA_BASE_URL="$(OLLAMA_BASE_URL)" \
+	OLLAMA_THINKING_ENABLED="$(OLLAMA_THINKING_ENABLED)" \
 	java -jar "$(GUMAN_JAR)"
 
 start: ollama-pull

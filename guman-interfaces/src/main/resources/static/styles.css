@@ -554,6 +554,47 @@ button {
   font-weight: 680;
 }
 
+.thinking-panel {
+  margin: 0 0 12px;
+  overflow: hidden;
+  border: 1px solid #e3e3e8;
+  border-radius: 10px;
+  color: #5f5f68;
+  background: #fafafa;
+}
+
+.thinking-panel[hidden] {
+  display: none;
+}
+
+.thinking-panel summary {
+  padding: 8px 11px;
+  cursor: pointer;
+  user-select: none;
+  white-space: normal;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.thinking-panel summary::marker {
+  color: #8b5cf6;
+}
+
+.thinking-panel[open] summary {
+  border-bottom: 1px solid #e8e8ec;
+}
+
+.thinking-content {
+  max-height: 280px;
+  padding: 10px 12px;
+  overflow: auto;
+  color: #71717a;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .assistant-text:empty::after {
   content: "";
   display: inline-block;
@@ -835,6 +876,11 @@ button {
   .message-content {
     max-width: 92%;
     font-size: 14px;
+  }
+
+  .thinking-content {
+    max-height: 220px;
+    font-size: 12px;
   }
 
   .composer-area {

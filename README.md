@@ -38,6 +38,7 @@ make ollama-run
 export GUMAN_ACTIVE_MODEL="ollama-qwen"
 export OLLAMA_MODEL="qwen3.5:9b"
 export OLLAMA_BASE_URL="http://localhost:11434"
+export OLLAMA_THINKING_ENABLED="true"
 export AGENTSCOPE_WORKSPACE=".agentscope/workspace"
 export SERVER_PORT="8080"
 ```
@@ -57,6 +58,8 @@ make run
 
 也可以在 `application.yml` 的 `guman.model.configurations` 下继续增加命名配置。同一 Provider 可以配置多套实例，例如不同的 Ollama 模型或不同的 OpenAI-compatible 地址；将 `guman.model.active` 指向相应名称后，重启应用即可切换。未被选择的配置不会创建模型连接。
 
+`qwen3.5:9b` 支持 thinking。默认的 `ollama-qwen` 配置通过 `thinking-enabled: true` 显式开启该能力，也可以设置 `OLLAMA_THINKING_ENABLED=false` 关闭。思考内容使用独立事件传输并显示在回答上方的“思考过程”面板中，不会混入最终回答。
+
 Web 端会为浏览器生成稳定的用户 ID，并为每个对话创建独立 session ID。AgentScope 运行时产生的会话与记忆文件不会提交到 Git；人格配置位于 `.agentscope/workspace/AGENTS.md`。
 
 ## 流式接口
@@ -67,7 +70,7 @@ curl -N http://localhost:8080/api/chat/stream \
   -d '{"message":"你好","userId":"alice","sessionId":"demo"}'
 ```
 
-接口返回 `text/event-stream`，目前会发送 `text-delta`、`tool-start`、`tool-end`、`done` 和 `error` 事件。
+接口返回 `text/event-stream`，目前会发送 `thinking-delta`、`text-delta`、`tool-start`、`tool-end`、`done` 和 `error` 事件。`thinking-delta` 只在当前模型启用并返回 thinking 内容时出现。
 
 ## 项目结构
 

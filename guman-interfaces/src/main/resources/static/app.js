@@ -216,13 +216,23 @@
     const name = document.createElement("div");
     name.className = "assistant-name";
     name.textContent = "Guman";
+    const thinking = document.createElement("details");
+    thinking.className = "thinking-panel";
+    thinking.hidden = !message.thinking;
+    thinking.open = Boolean(message.thinking);
+    const thinkingSummary = document.createElement("summary");
+    thinkingSummary.textContent = "思考过程";
+    const thinkingContent = document.createElement("div");
+    thinkingContent.className = "thinking-content";
+    thinkingContent.textContent = message.thinking ?? "";
+    thinking.append(thinkingSummary, thinkingContent);
     const tools = document.createElement("div");
     tools.className = "tool-events";
     renderToolEvents(tools, message.tools ?? []);
     const text = document.createElement("div");
     text.className = "assistant-text";
     text.textContent = message.content;
-    body.append(name, tools, text);
+    body.append(name, thinking, tools, text);
     article.append(avatar, body);
     return article;
   }
@@ -249,6 +259,7 @@
       id: crypto.randomUUID(),
       role: "assistant",
       content: "",
+      thinking: "",
       tools: []
     };
 
@@ -338,7 +349,9 @@
 
   function applyStreamEvent(message, payload) {
     const { eventName, data } = payload;
-    if (eventName === "text-delta") {
+    if (eventName === "thinking-delta") {
+      message.thinking = (message.thinking ?? "") + (data.content ?? "");
+    } else if (eventName === "text-delta") {
       message.content += data.content ?? "";
     } else if (eventName === "tool-start") {
       message.tools.push({ name: data.content || "工具", done: false });
@@ -356,6 +369,12 @@
   function updateAssistantMessage(message) {
     const article = elements.messageList.querySelector(`[data-message-id="${message.id}"]`);
     if (!article) return;
+    const thinkingPanel = article.querySelector(".thinking-panel");
+    const thinkingContent = message.thinking ?? "";
+    const wasHidden = thinkingPanel.hidden;
+    thinkingPanel.hidden = !thinkingContent;
+    if (thinkingContent && wasHidden) thinkingPanel.open = true;
+    thinkingPanel.querySelector(".thinking-content").textContent = thinkingContent;
     article.querySelector(".assistant-text").textContent = message.content;
     renderToolEvents(article.querySelector(".tool-events"), message.tools ?? []);
   }

@@ -2,6 +2,8 @@ package io.github.paoxia.guman.infrastructure.agentscope;
 
 import io.agentscope.core.model.Model;
 import io.agentscope.extensions.model.ollama.OllamaChatModel;
+import io.agentscope.extensions.model.ollama.options.OllamaOptions;
+import io.agentscope.extensions.model.ollama.options.ThinkOption;
 import io.agentscope.extensions.model.openai.OpenAIChatModel;
 import java.util.Locale;
 import java.util.Map;
@@ -68,11 +70,24 @@ public class AgentModelConfiguration {
     private Model buildOllamaModel(
             String activeName, AgentModelProperties.ModelSettings settings) {
         String propertyPrefix = "guman.model.configurations." + activeName;
-        return OllamaChatModel.builder()
-                .modelName(requireText(settings.getModelName(), propertyPrefix + ".model-name"))
-                .baseUrl(requireText(settings.getBaseUrl(), propertyPrefix + ".base-url"))
-                .stream(settings.isStream())
-                .build();
+        OllamaChatModel.Builder builder =
+                OllamaChatModel.builder()
+                        .modelName(
+                                requireText(
+                                        settings.getModelName(), propertyPrefix + ".model-name"))
+                        .baseUrl(requireText(settings.getBaseUrl(), propertyPrefix + ".base-url"))
+                        .stream(settings.isStream());
+        if (settings.getThinkingEnabled() != null) {
+            ThinkOption thinkOption =
+                    settings.getThinkingEnabled()
+                            ? ThinkOption.ThinkBoolean.ENABLED
+                            : ThinkOption.ThinkBoolean.DISABLED;
+            builder.defaultOptions(OllamaOptions.builder().thinkOption(thinkOption).build());
+            if (settings.getThinkingEnabled()) {
+                builder.formatter(new ThinkingOllamaChatFormatter());
+            }
+        }
+        return builder.build();
     }
 
     /**

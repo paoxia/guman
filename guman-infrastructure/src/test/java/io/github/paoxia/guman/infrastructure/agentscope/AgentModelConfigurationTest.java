@@ -4,9 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.agentscope.core.model.Model;
 import io.agentscope.extensions.model.ollama.OllamaChatModel;
+import io.agentscope.extensions.model.ollama.options.OllamaOptions;
+import io.agentscope.extensions.model.ollama.options.ThinkOption;
 import io.agentscope.extensions.model.openai.OpenAIChatModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /** 验证命名模型配置的选择、实例化和边界校验。 */
 class AgentModelConfigurationTest {
@@ -26,6 +29,7 @@ class AgentModelConfigurationTest {
                         "guman.model.configurations.local-qwen.provider=ollama",
                         "guman.model.configurations.local-qwen.model-name=qwen3.5:9b",
                         "guman.model.configurations.local-qwen.base-url=http://localhost:11434",
+                        "guman.model.configurations.local-qwen.thinking-enabled=true",
                         "guman.model.configurations.remote.provider=openai")
                 .run(
                         context -> {
@@ -35,6 +39,12 @@ class AgentModelConfigurationTest {
                             assertThat(((OllamaChatModel) model).getModelName())
                                     .isEqualTo("qwen3.5:9b");
                             assertThat(((OllamaChatModel) model).isStreaming()).isTrue();
+                            OllamaOptions defaultOptions =
+                                    (OllamaOptions)
+                                            ReflectionTestUtils.getField(model, "defaultOptions");
+                            assertThat(defaultOptions).isNotNull();
+                            assertThat(defaultOptions.getThinkOption())
+                                    .isEqualTo(ThinkOption.ThinkBoolean.ENABLED);
                         });
     }
 

@@ -35,6 +35,7 @@ public class ChatEventResponse {
     public static ChatEventResponse from(ChatStreamEvent event) {
         String responseType =
                 switch (event.getType()) {
+                    case THINKING_DELTA -> "thinking-delta";
                     case TEXT_DELTA -> "text-delta";
                     case TOOL_STARTED -> "tool-start";
                     case TOOL_COMPLETED -> "tool-end";

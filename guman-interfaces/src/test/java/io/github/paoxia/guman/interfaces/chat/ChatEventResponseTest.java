@@ -13,6 +13,8 @@ class ChatEventResponseTest {
      */
     @Test
     void mapsDomainEventTypesToStableSseNames() {
+        assertThat(responseTypeOf(ChatStreamEventType.THINKING_DELTA))
+                .isEqualTo("thinking-delta");
         assertThat(responseTypeOf(ChatStreamEventType.TEXT_DELTA)).isEqualTo("text-delta");
         assertThat(responseTypeOf(ChatStreamEventType.TOOL_STARTED)).isEqualTo("tool-start");
         assertThat(responseTypeOf(ChatStreamEventType.TOOL_COMPLETED)).isEqualTo("tool-end");

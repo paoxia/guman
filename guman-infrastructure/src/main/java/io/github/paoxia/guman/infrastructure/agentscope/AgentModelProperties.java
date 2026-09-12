@@ -91,6 +91,11 @@ public class AgentModelProperties {
         private boolean stream = true;
 
         /*
+         * Ollama 是否返回独立的思考过程，未配置时采用 AgentScope 默认值。
+         */
+        private Boolean thinkingEnabled;
+
+        /*
          * 是否启用 OpenAI 原生结构化输出，未配置时采用 AgentScope 默认值。
          */
         private Boolean nativeStructuredOutput;
@@ -209,6 +214,24 @@ public class AgentModelProperties {
          */
         public void setStream(boolean stream) {
             this.stream = stream;
+        }
+
+        /**
+         * 获取 Ollama 思考过程开关。
+         *
+         * @return 开关值，未配置时为空
+         */
+        public Boolean getThinkingEnabled() {
+            return thinkingEnabled;
+        }
+
+        /**
+         * 设置是否让 Ollama 返回独立思考过程，无返回值。
+         *
+         * @param thinkingEnabled 是否启用思考过程
+         */
+        public void setThinkingEnabled(Boolean thinkingEnabled) {
+            this.thinkingEnabled = thinkingEnabled;
         }
 
         /**
